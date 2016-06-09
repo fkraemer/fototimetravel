@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Name=FotoTimeTravel 
+Icon=/home/flo/workspace/python/fototimetravel/fototimetravel.xpm
+Exec=python /home/flo/workspace/python/fototimetravel/py/fotobase_background_selector.py /home/flo/workspace/python/fototimetravel/fototimetravel_fotobase.dat --shuffle
+StartupNotify=false
+OnlyShowIn=Unity;
+X-UnityGenerated=true

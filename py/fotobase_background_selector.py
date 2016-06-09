@@ -3,14 +3,21 @@
 #!/usr/bin/env python
 import argparse
 from datetime import datetime
+from time import sleep
 from itertools import izip
-from os import system, path
+from os import system, path, getppid
 from PIL import Image, ImageDraw, ImageFont
+from sys import exit
 import random
 
+intervall = 600                # Period of slide show in seconds
+    
 parser = argparse.ArgumentParser(description='Search in the DB to give back an image from the same day some years ago')
 parser.add_argument('file', type=str,
                    help="the file where the fotobase will be read from")
+parser.add_argument('--shuffle',  action="store_true", default=False,
+                   help="single reshuffle of wallpaper (if you dont like it)")
+
 
 def editPhotoAndCopyToTemp(image,year):
     head, tail = path.split(image)
@@ -42,38 +49,25 @@ def main():
     listToChooseFrom = []
     for f,t in izip(filenames, timestamps):
         if t.day == today.day and t.month == today.month:
-            print "{} was shot the same day {} years ago".format(f,today.year-t.year)
-            listToChooseFrom.append( (f, t.year))
+            if path.isfile(f):
+                print "{} was shot the same day {} years ago".format(f,today.year-t.year)
+                listToChooseFrom.append( (f, t.year))
     
-    image, year = random.choice(listToChooseFrom)
+    if len(listToChooseFrom)==0:
+        exit();        
     
-    #TODO, check whether file still exists
-
-    newImage = editPhotoAndCopyToTemp(image, year)
-    #TODO choose several images, make slideshow
-
-
-
-#import random
-#import time
-#import os
-#import sys
-#
-    intervall = 300                # Intervall in Sekunden
-#dir = "~/Hintergrundbilder/"   # Bilderverzeichnis
-#
-#find = os.popen("find " + dir + " -xtype f")
-#photos = find.readlines()
-#find.close()
-#
-#random.seed()
-#while True:
-#    if os.getppid() == 1:                       # nach dem Abmelden beenden
-#	sys.exit()
-#
-## je nach Desktop-Umgebung bitte anpassen!
-    system("gsettings set org.gnome.desktop.background picture-uri 'file://" + newImage + "'")  # ab Ubuntu 11.04
-#   time.sleep(intervall)
+    
+    while True:
+        if getppid() == 1:                       # nach dem Abmelden beenden
+            exit()
+        
+        image, year = random.choice(listToChooseFrom)
+        if path.isfile(image):
+            newImage = editPhotoAndCopyToTemp(image, year)
+            system("gsettings set org.gnome.desktop.background picture-uri 'file://" + newImage + "'")  # ab Ubuntu 11.04
+        if args.shuffle:
+            exit()
+        sleep(intervall)
 
 if __name__ == "__main__":
     main()

@@ -1,8 +1,9 @@
 import exifread
 import argparse
-from os import walk
+from os import walk, path, makedirs
 from time import mktime
-from time import strptime, strftime
+from time import strptime
+import re #regular expressions
 
 # -*- coding: utf-8 -*-
 
@@ -42,33 +43,43 @@ def main():
             f = open(fullfilename, 'rb')
             tags = exifread.process_file(f, details=False, stop_tag=targetTags[0])
             s = None
+            t=None
             for targetTag in targetTags:
                 if targetTag in tags.keys():         
                     s = tags[targetTag]
             if s:
-                #t = mktime(s)
                 try:
                     t = strptime(s.printable, '%Y:%m:%d %H:%M:%S')
                 except ValueError as err:
                     print("Value error: {0}".format(err))
-                #print strftime('%Y:%m:%d %H:%M:%S',t)
-                tInSecs = mktime(t)
-                
-                pics.append("{};{}\n".format(fullfilename,tInSecs))
-                picsRead = picsRead +1
             else:
-                #TODO get date from filename (sometimes possible)
-                print "couldnt read {}".format(fullfilename)
+                #parse date from filename (sometimes possible)
+                print "Trying to read date from {}".format(filename)
+                match = re.search(r'-\d{4}\d{2}\d{2}-', filename) #this corresponds to the whatsapp file saveing format  
+                if match:
+                    try:
+                        t = strptime(match.group(), '-%Y%m%d-')
+                    except ValueError as err:
+                        print("Value error: {0}".format(err))
+                else:
+                    print "Failed for the Whatsapp format."
+            
+            #append this foto to the DB
+            if t:
+                #print strftime('%Y:%m:%d %H:%M:%S',t)
+                tInSecs = mktime(t)                
+                pics.append("{};{}\n".format(fullfilename,tInSecs)) 
+                picsRead = picsRead +1                   
         if picsRead > 0:
-            print "Read tags for [{}/{}][{:2.1f}]".format( picsRead,len(filenames),100*picsRead/float(len(filenames)) )
-            filesReadGlobal = filesReadGlobal + picsRead
+            print "In {} I did read tags for [{}/{}], that is {:2.1f} percent".format( dirpath, picsRead,len(filenames),100*picsRead/float(len(filenames)) )
+            filesReadGlobal = filesReadGlobal + len(filenames)
     #print pics
             
     
-    print "\nTotal: Read tags for [{}/{}][{:2.1f}]".format( len(pics),filesReadGlobal,100*float(len(pics))/filesReadGlobal )
+    print "\nTotal: Read tags for [{}/{}], that is {:2.1f} in percent ".format(len(pics), filesReadGlobal,100*float(len(pics))/filesReadGlobal )
     print "writing fotobase to {}".format(outputPath)
-    if not os.path.exists(args.path):
-        os.makedirs(args.path)
+    if not path.exists(args.path):
+        makedirs(args.path)
     f = open(outputPath, 'w+')
     f.writelines(pics)
     f.flush()

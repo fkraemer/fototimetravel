@@ -67,6 +67,7 @@ def main():
             system("gsettings set org.gnome.desktop.background picture-uri 'file://" + newImage + "'")  # ab Ubuntu 11.04
         if args.shuffle:
             exit()
+            break
         sleep(intervall)
 
 if __name__ == "__main__":
